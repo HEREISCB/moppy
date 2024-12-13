@@ -2,7 +2,7 @@
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Text } from '@react-three/drei'
 import { motion, AnimatePresence } from 'framer-motion'
-import React, { Suspense, useState } from 'react'
+import React, { Suspense, useState, useEffect } from 'react'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { Mesh, MeshStandardMaterial } from 'three'
@@ -209,37 +209,37 @@ function Mop({ color, accent, handle }: MopProps) {
 }
 
 function Broom({ modelIndex }: BroomProps) {
-  const { scene } = useGLTF('/glb/broom.glb')
+  const { scene } = useGLTF('/glb/brooms.glb')
   const broomScene = scene.clone()
 
-  // Hide all broom models first
-  broomScene.traverse((child) => {
-    if ((child as Mesh).isMesh) {
-      const meshChild = child as Mesh
-      meshChild.visible = false
-    }
-  })
-  
-  // Show only the selected broom model
-  let currentBroom = 0
-  let selectedBroom: Mesh | null = null
-  
-  broomScene.traverse((child) => {
-    if ((child as Mesh).isMesh) {
-      if (currentBroom === modelIndex) {
-        (child as Mesh).visible = true
-        selectedBroom = child as Mesh
+  useEffect(() => {
+    // Hide all broom models first
+    broomScene.traverse((child) => {
+      if ((child as Mesh).isMesh) {
+        const meshChild = child as Mesh
+        meshChild.visible = false
       }
-      currentBroom++
-    }
-  })
-
-  // Center the selected broom
-  if (selectedBroom && selectedBroom.parent) {
-    const box = new THREE.Box3().setFromObject(selectedBroom)
-    const center = box.getCenter(new THREE.Vector3())
-    selectedBroom.parent.position.sub(center)
-  }
+    })
+    
+    // Show only the selected broom model
+    let currentBroom = 0
+    
+    broomScene.traverse((child) => {
+      if ((child as Mesh).isMesh) {
+        if (currentBroom === modelIndex) {
+          (child as Mesh).visible = true
+          
+          // Center the mesh's parent group
+          if (child.parent) {
+            const box = new THREE.Box3().setFromObject(child)
+            const center = box.getCenter(new THREE.Vector3())
+            child.parent.position.sub(center)
+          }
+        }
+        currentBroom++
+      }
+    })
+  }, [broomScene, modelIndex])
 
   return (
     <group position={[0, -2, 0]} scale={[4.5, 4.5, 4.5]} rotation={[0, Math.PI, 0]}>
