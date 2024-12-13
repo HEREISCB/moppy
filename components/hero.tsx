@@ -5,77 +5,82 @@ import { motion, AnimatePresence } from 'framer-motion'
 import React, { Suspense, useState } from 'react'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
+import { Mesh, MeshStandardMaterial } from 'three'
 
 // Define interfaces for product types
 interface FloorCleanerProps {
-  color: string;
-  accent: string;
+  color: string
+  accent: string
 }
 
 interface SprayBottleProps {
-  color: string;
-  accent: string;
-  nozzle: string;
+  color: string
+  accent: string
+  nozzle: string
 }
 
 interface MopProps {
-  color: string;
-  accent: string;
-  handle: string;
+  color: string
+  accent: string
+  handle: string
 }
 
 interface BroomProps {
-  modelIndex: number;
+  modelIndex: number
 }
-type ProductItem = 
-  | { type: 'Floor Cleaners', color: string; name: string; accent: string }
-  | { type: 'Spray Bottles', color: string; name: string; accent: string; nozzle: string }
-  | { type: 'Mops', name: string; color: string; accent: string; handle: string }
-  | { type: 'Brooms', name: string; modelIndex: number };
 
-// Define a type for product categories
-// type ProductCategory = {
-//   type: string;
-//   items: ProductItem[];
-// };
+interface ProductItem {
+  type: 'Floor Cleaners' | 'Spray Bottles' | 'Mops' | 'Brooms'
+  name: string
+  color?: string
+  accent?: string
+  nozzle?: string
+  handle?: string
+  modelIndex?: number
+}
 
+// Define type for product category
+interface ProductCategory {
+  type: string
+  items: ProductItem[]
+}
 
-const products = [
+const products: ProductCategory[] = [
   {
     type: 'Floor Cleaners',
     items: [
-      { color: '#80DEEA', name: 'Ocean Fresh Floor Cleaner', accent: '#4DD0E1' },
-      { color: '#FFD54F', name: 'Citrus Floor Cleaner', accent: '#FFC107' },
-      { color: '#F48FB1', name: 'Spring Fresh Floor Cleaner', accent: '#EC407A' },
-      { color: '#81C784', name: 'Pine Floor Cleaner', accent: '#4CAF50' },
-      { color: '#212121', name: 'Deep Clean Floor Cleaner', accent: '#424242' },
+      { type: 'Floor Cleaners', name: 'Ocean Fresh Floor Cleaner', color: '#80DEEA', accent: '#4DD0E1' },
+      { type: 'Floor Cleaners', name: 'Citrus Floor Cleaner', color: '#FFD54F', accent: '#FFC107' },
+      { type: 'Floor Cleaners', name: 'Spring Fresh Floor Cleaner', color: '#F48FB1', accent: '#EC407A' },
+      { type: 'Floor Cleaners', name: 'Pine Floor Cleaner', color: '#81C784', accent: '#4CAF50' },
+      { type: 'Floor Cleaners', name: 'Deep Clean Floor Cleaner', color: '#212121', accent: '#424242' },
     ]
   },
   {
     type: 'Spray Bottles',
     items: [
-      { color: '#90CAF9', name: 'Glass Cleaner Spray', accent: '#1976D2', nozzle: '#E0E0E0' },
-      { color: '#FFB74D', name: 'Multi-Surface Spray', accent: '#F57C00', nozzle: '#E0E0E0' },
-      { color: '#81C784', name: 'Kitchen Cleaner Spray', accent: '#388E3C', nozzle: '#E0E0E0' },
-      { color: '#9575CD', name: 'Bathroom Cleaner Spray', accent: '#5E35B1', nozzle: '#E0E0E0' },
+      { type: 'Spray Bottles', name: 'Glass Cleaner Spray', color: '#90CAF9', accent: '#1976D2', nozzle: '#E0E0E0' },
+      { type: 'Spray Bottles', name: 'Multi-Surface Spray', color: '#FFB74D', accent: '#F57C00', nozzle: '#E0E0E0' },
+      { type: 'Spray Bottles', name: 'Kitchen Cleaner Spray', color: '#81C784', accent: '#388E3C', nozzle: '#E0E0E0' },
+      { type: 'Spray Bottles', name: 'Bathroom Cleaner Spray', color: '#9575CD', accent: '#5E35B1', nozzle: '#E0E0E0' },
     ]
   },
   {
     type: 'Mops',
     items: [
-      { name: 'Ocean Blue Mop', color: '#2196F3', accent: '#1976D2', handle: '#78909C' },
-      { name: 'Sunset Orange Mop', color: '#FF9800', accent: '#F57C00', handle: '#8D6E63' },
-      { name: 'Forest Green Mop', color: '#4CAF50', accent: '#388E3C', handle: '#795548' },
+      { type: 'Mops', name: 'Ocean Blue Mop', color: '#2196F3', accent: '#1976D2', handle: '#78909C' },
+      { type: 'Mops', name: 'Sunset Orange Mop', color: '#FF9800', accent: '#F57C00', handle: '#8D6E63' },
+      { type: 'Mops', name: 'Forest Green Mop', color: '#4CAF50', accent: '#388E3C', handle: '#795548' },
     ]
   },
   {
     type: 'Brooms',
     items: [
-      { name: 'Garden Sweep', modelIndex: 0 },
-      { name: 'Indoor Pro', modelIndex: 1 },
-      { name: 'Heavy Duty', modelIndex: 2 },
-      { name: 'Soft Sweep', modelIndex: 3 },
-      { name: 'Multi-Surface', modelIndex: 4 }
+      { type: 'Brooms', name: 'Garden Sweep', modelIndex: 0 },
+      { type: 'Brooms', name: 'Indoor Pro', modelIndex: 1 },
+      { type: 'Brooms', name: 'Heavy Duty', modelIndex: 2 },
+      { type: 'Brooms', name: 'Soft Sweep', modelIndex: 3 },
+      { type: 'Brooms', name: 'Multi-Surface', modelIndex: 4 }
     ]
   }
 ]
@@ -124,28 +129,32 @@ function SprayBottle({ color, accent, nozzle }: SprayBottleProps) {
 
   // Apply colors to different parts of the spray bottle
   sprayScene.traverse((child) => {
-    if (child.isMesh) {
+    if ((child as Mesh).isMesh) {
+      const meshChild = child as Mesh
       // Create a new material to avoid sharing
-      const newMaterial = child.material.clone()
-      
-      // Apply different colors based on the mesh name or position
-      if (child.name.toLowerCase().includes('nozzle') || child.name.toLowerCase().includes('trigger')) {
-        newMaterial.color.set(nozzle)
-        newMaterial.roughness = 0.3
-        newMaterial.metalness = 0.8
-      } else if (child.name.toLowerCase().includes('cap') || child.name.toLowerCase().includes('base')) {
-        newMaterial.color.set(accent)
-        newMaterial.roughness = 0.3
-        newMaterial.metalness = 0.6
+      if (Array.isArray(meshChild.material)) {
+        meshChild.material = meshChild.material.map(mat => {
+          const newMat = mat.clone() as MeshStandardMaterial
+          return newMat
+        })
       } else {
-        newMaterial.color.set(color)
-        newMaterial.roughness = 0.1
-        newMaterial.metalness = 0.2
-        newMaterial.transparent = true
-        newMaterial.opacity = 0.9
+        const newMaterial = meshChild.material.clone() as MeshStandardMaterial
+        // Apply different colors based on the mesh name or position
+        if (child.name.toLowerCase().includes('nozzle') || child.name.toLowerCase().includes('trigger')) {
+          newMaterial.color.set(nozzle)
+          newMaterial.roughness = 0.3
+          newMaterial.metalness = 0.8
+        } else if (child.name.toLowerCase().includes('cap') || child.name.toLowerCase().includes('base')) {
+          newMaterial.color.set(accent)
+          newMaterial.roughness = 0.3
+          newMaterial.metalness = 0.6
+        } else {
+          newMaterial.color.set(color)
+          newMaterial.roughness = 0.4
+          newMaterial.metalness = 0.3
+        }
+        meshChild.material = newMaterial
       }
-      
-      child.material = newMaterial
     }
   })
 
@@ -163,20 +172,32 @@ function Mop({ color, accent, handle }: MopProps) {
   
   // Apply colors to different parts of the mop
   mopScene.traverse((child) => {
-    if (child.isMesh) {
+    if ((child as Mesh).isMesh) {
+      const meshChild = child as Mesh
       // Create a new material to avoid sharing
-      const newMaterial = child.material.clone()
-      
-      // Apply different colors based on the mesh name or position
-      if (child.name.toLowerCase().includes('handle')) {
-        newMaterial.color.set(handle)
-      } else if (child.name.toLowerCase().includes('head') || child.name.toLowerCase().includes('mop')) {
-        newMaterial.color.set(color)
+      if (Array.isArray(meshChild.material)) {
+        meshChild.material = meshChild.material.map(mat => {
+          const newMat = mat.clone() as MeshStandardMaterial
+          return newMat
+        })
       } else {
-        newMaterial.color.set(accent)
+        const newMaterial = meshChild.material.clone() as MeshStandardMaterial
+        // Apply different colors based on the mesh name or position
+        if (child.name.toLowerCase().includes('handle')) {
+          newMaterial.color.set(handle)
+          newMaterial.roughness = 0.4
+          newMaterial.metalness = 0.6
+        } else if (child.name.toLowerCase().includes('base') || child.name.toLowerCase().includes('connector')) {
+          newMaterial.color.set(accent)
+          newMaterial.roughness = 0.3
+          newMaterial.metalness = 0.7
+        } else {
+          newMaterial.color.set(color)
+          newMaterial.roughness = 0.5
+          newMaterial.metalness = 0.2
+        }
+        meshChild.material = newMaterial
       }
-      
-      child.material = newMaterial
     }
   })
   
@@ -188,35 +209,36 @@ function Mop({ color, accent, handle }: MopProps) {
 }
 
 function Broom({ modelIndex }: BroomProps) {
-
-  const { scene } = useGLTF('/glb/brooms.glb')
+  const { scene } = useGLTF('/glb/broom.glb')
   const broomScene = scene.clone()
-  
+
   // Hide all broom models first
   broomScene.traverse((child) => {
-    if (child.isMesh) {
-      child.visible = false
+    if ((child as Mesh).isMesh) {
+      const meshChild = child as Mesh
+      meshChild.visible = false
     }
   })
   
-  // Show only the selected broom model and center it
+  // Show only the selected broom model
   let currentBroom = 0
-  let selectedBroom = null
+  let selectedBroom: Mesh | null = null
+  
   broomScene.traverse((child) => {
-    if (child.isMesh) {
+    if ((child as Mesh).isMesh) {
       if (currentBroom === modelIndex) {
-        child.visible = true
-        selectedBroom = child
+        (child as Mesh).visible = true
+        selectedBroom = child as Mesh
       }
       currentBroom++
     }
   })
 
   // Center the selected broom
-  if (selectedBroom) {
+  if (selectedBroom && selectedBroom.parent) {
     const box = new THREE.Box3().setFromObject(selectedBroom)
     const center = box.getCenter(new THREE.Vector3())
-    selectedBroom.position.sub(center)
+    selectedBroom.parent.position.sub(center)
   }
 
   return (
@@ -227,6 +249,7 @@ function Broom({ modelIndex }: BroomProps) {
     </group>
   )
 }
+
 interface ProductDisplayProps {
   productType: string;
   item: ProductItem; 
@@ -306,7 +329,7 @@ export default function Hero() {
             className="text-4xl md:text-6xl font-bold text-emerald-950 mb-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.2 }}
           >
             {currentProductItem.name}
           </motion.h1>

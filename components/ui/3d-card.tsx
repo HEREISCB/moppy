@@ -117,7 +117,7 @@ export const CardItem = ({
   rotateX?: number | string;
   rotateY?: number | string;
   rotateZ?: number | string;
-  [key: string]: React.ReactNode | string | number | undefined;
+  [key: string]: React.ReactNode | string | number | React.ElementType | undefined;
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [isMouseEntered] = useMouseEnter();
