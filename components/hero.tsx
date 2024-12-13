@@ -1,11 +1,44 @@
 'use client'
-
-import { Canvas, useLoader, useFrame } from '@react-three/fiber'
+import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Text } from '@react-three/drei'
 import { motion, AnimatePresence } from 'framer-motion'
 import React, { Suspense, useState } from 'react'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
+
+// Define interfaces for product types
+interface FloorCleanerProps {
+  color: string;
+  accent: string;
+}
+
+interface SprayBottleProps {
+  color: string;
+  accent: string;
+  nozzle: string;
+}
+
+interface MopProps {
+  color: string;
+  accent: string;
+  handle: string;
+}
+
+interface BroomProps {
+  modelIndex: number;
+}
+type ProductItem = 
+  | { type: 'Floor Cleaners', color: string; name: string; accent: string }
+  | { type: 'Spray Bottles', color: string; name: string; accent: string; nozzle: string }
+  | { type: 'Mops', name: string; color: string; accent: string; handle: string }
+  | { type: 'Brooms', name: string; modelIndex: number };
+
+// Define a type for product categories
+// type ProductCategory = {
+//   type: string;
+//   items: ProductItem[];
+// };
+
 
 const products = [
   {
@@ -30,9 +63,9 @@ const products = [
   {
     type: 'Mops',
     items: [
-      { name: 'Ocean Blue Mop', modelIndex: 0, color: '#2196F3', accent: '#1976D2', handle: '#78909C' },
-      { name: 'Sunset Orange Mop', modelIndex: 0, color: '#FF9800', accent: '#F57C00', handle: '#8D6E63' },
-      { name: 'Forest Green Mop', modelIndex: 0, color: '#4CAF50', accent: '#388E3C', handle: '#795548' },
+      { name: 'Ocean Blue Mop', color: '#2196F3', accent: '#1976D2', handle: '#78909C' },
+      { name: 'Sunset Orange Mop', color: '#FF9800', accent: '#F57C00', handle: '#8D6E63' },
+      { name: 'Forest Green Mop', color: '#4CAF50', accent: '#388E3C', handle: '#795548' },
     ]
   },
   {
@@ -47,7 +80,8 @@ const products = [
   }
 ]
 
-function FloorCleaner({ color, accent }) {
+function FloorCleaner({ color, accent }: FloorCleanerProps) {
+
   return (
     <group position={[0, -0.8, 0]} scale={[1.5, 1.5, 1.5]} rotation={[0, Math.PI, 0]}>
       <mesh position={[0, 0, 0]}>
@@ -83,7 +117,8 @@ function FloorCleaner({ color, accent }) {
   )
 }
 
-function SprayBottle({ color, accent, nozzle }) {
+function SprayBottle({ color, accent, nozzle }: SprayBottleProps) {
+
   const { scene } = useGLTF('/glb/spray.glb')
   const sprayScene = scene.clone()
 
@@ -121,7 +156,8 @@ function SprayBottle({ color, accent, nozzle }) {
   )
 }
 
-function Mop({ modelIndex, color, accent, handle }) {
+function Mop({ color, accent, handle }: MopProps) {
+
   const { scene } = useGLTF('/glb/mop.glb')
   const mopScene = scene.clone()
   
@@ -151,7 +187,8 @@ function Mop({ modelIndex, color, accent, handle }) {
   )
 }
 
-function Broom({ modelIndex }) {
+function Broom({ modelIndex }: BroomProps) {
+
   const { scene } = useGLTF('/glb/brooms.glb')
   const broomScene = scene.clone()
   
@@ -190,21 +227,38 @@ function Broom({ modelIndex }) {
     </group>
   )
 }
+interface ProductDisplayProps {
+  productType: string;
+  item: ProductItem; 
+}
 
-function ProductDisplay({ productType, item }) {
+function ProductDisplay({ productType, item }: ProductDisplayProps) {
   switch (productType) {
     case 'Floor Cleaners':
-      return <FloorCleaner color={item.color} accent={item.accent} />
+      if ('color' in item && 'accent' in item) {
+        return <FloorCleaner color={item.color} accent={item.accent} />
+      }
+      break;
     case 'Spray Bottles':
-      return <SprayBottle color={item.color} accent={item.accent} nozzle={item.nozzle} />
+      if ('color' in item && 'accent' in item && 'nozzle' in item) {
+        return <SprayBottle color={item.color} accent={item.accent} nozzle={item.nozzle} />
+      }
+      break;
     case 'Mops':
-      return <Mop modelIndex={item.modelIndex} color={item.color} accent={item.accent} handle={item.handle} />
+      if ('color' in item && 'accent' in item && 'handle' in item) {
+        return <Mop color={item.color} accent={item.accent} handle={item.handle} />
+      }
+      break;
     case 'Brooms':
-      return <Broom modelIndex={item.modelIndex} />
-    default:
-      return null
+      if ('modelIndex' in item) {
+        return <Broom modelIndex={item.modelIndex} />
+      }
+      break;
   }
+  return null;
 }
+
+
 
 export default function Hero() {
   const [currentType, setCurrentType] = useState(0)
@@ -214,11 +268,12 @@ export default function Hero() {
   const currentProduct = products[currentType]
   const currentProductItem = currentProduct.items[currentItem]
 
-  const handleDragStart = (event, info) => {
+  // Rest of the component remains the same
+  const handleDragStart = (event: any, info: any) => {
     setDragStart(info.point.x)
   }
 
-  const handleDragEnd = (event, info) => {
+  const handleDragEnd = (event: any, info: any) => {
     const drag = dragStart - info.point.x
     if (Math.abs(drag) > 50) {
       if (drag > 0 && currentItem < currentProduct.items.length - 1) {
@@ -228,6 +283,7 @@ export default function Hero() {
       }
     }
   }
+
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden pt-20 md:pt-24">
@@ -348,7 +404,7 @@ export default function Hero() {
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
             >
-              Swipe or use arrows to explore different fragrances
+              Swipe or use arrows to explore different fragrances and products
             </motion.p>
           </div>
         </div>

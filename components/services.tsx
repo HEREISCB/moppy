@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { CardContainer, CardBody, CardItem } from '@/components/ui/3d-card'
+import Image from 'next/image'
 
 const services = [
   {
@@ -74,12 +75,12 @@ export default function Services() {
                     {service.description}
                   </CardItem>
                   <CardItem translateZ="100" className="w-full mb-6">
-                    <img
+                    <Image
                       src={service.image}
-                      height="1000"
-                      width="1000"
-                      className="h-48 w-full object-cover rounded-xl group-hover/card:shadow-xl"
                       alt={service.title}
+                      width={1000}
+                      height={1000}
+                      className="h-48 w-full object-cover rounded-xl group-hover/card:shadow-xl"
                     />
                   </CardItem>
                   <CardItem
